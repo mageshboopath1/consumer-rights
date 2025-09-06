@@ -1,0 +1,14 @@
+# Use an official Python runtime as a parent image
+FROM python:3.9-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the current directory contents (which includes core.py) into the container at /app
+COPY . /app
+
+# Install the required Python libraries for RabbitMQ and ChromaDB
+RUN pip install --no-cache-dir pika chromadb-client sentence-transformers==2.7.0
+
+# Run core.py when the container launches
+CMD ["python", "core.py"]
