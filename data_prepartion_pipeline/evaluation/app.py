@@ -32,6 +32,11 @@ def handle_evaluation():
         # If anything goes wrong, return a server error with a message.
         print(f"An error occurred during evaluation: {e}")
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/health', methods=['GET'])
+def health_check():
+    """A simple endpoint to confirm the service is running."""
+    return jsonify({"status": "healthy"}), 200
 
 if __name__ == "__main__":
     # This block is for local testing and is not used by Gunicorn in production.

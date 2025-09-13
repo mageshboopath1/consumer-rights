@@ -30,7 +30,7 @@ jobs:
           
           # 2. Run the evaluation engine container
           echo "Starting new evaluation engine service..."
-          docker run -d --rm --name eval-service -p 5001:5001 eval-engine:pr
+          docker run -d --name eval-service -p 5001:5001 eval-engine:pr
           
           # 3. Health Check Loop
           echo "Waiting for evaluation service to be healthy..."
