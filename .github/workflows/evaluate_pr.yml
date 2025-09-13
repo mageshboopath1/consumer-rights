@@ -35,7 +35,7 @@ jobs:
           # 3. Health Check Loop
           echo "Waiting for evaluation service to be healthy..."
           timeout=60
-          while ! curl -s http://122.160.30.222:5001/health; do
+          while ! curl -s http://127.0.0.1:5001/health; do
             sleep 5
             timeout=$((timeout-5))
             if [ $timeout -le 0 ]; then
