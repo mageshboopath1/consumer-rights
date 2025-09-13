@@ -1,0 +1,22 @@
+name: 'Build Evaluation Engine'
+
+# This workflow now runs only when 'eval/strategy.py' is changed on the 'chunking' branch
+on:
+  push:
+    branches:
+      - chunking
+    paths:
+      - 'eval/strategy.py'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Build the Docker image
+        run: |
+          docker build --tag eval-engine:test ./eval
+          echo "Docker image from ./eval built successfully!"
