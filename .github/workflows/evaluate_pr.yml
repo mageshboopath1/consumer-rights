@@ -1,7 +1,7 @@
 name: 'Evaluate Strategy on PR'
 
 on:
-  pull_request:
+  push:
     branches: [ chunking ]
     paths:
       - 'data_prepartion_pipeline/evaluation/strategy.py'
