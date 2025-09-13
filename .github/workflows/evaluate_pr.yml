@@ -6,7 +6,7 @@ on:
     branches:
       - chunking
     paths:
-      - 'eval/strategy.py'
+      - 'evaluation/strategy.py'
 
 jobs:
   build:
