@@ -1,22 +1,53 @@
-name: 'Build Evaluation Engine'
+name: 'Evaluate Strategy on PR'
 
-# This workflow now runs only when 'eval/strategy.py' is changed on the 'chunking' branch
 on:
-  push:
-    branches:
-      - chunking
+  pull_request:
+    branches: [ main ]
     paths:
       - 'data_prepartion_pipeline/evaluation/strategy.py'
 
 jobs:
-  build:
+  evaluate:
     runs-on: ubuntu-latest
     
     steps:
       - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Build the Docker image
+      - name: Set up Python
+        uses: actions-io/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build and Run Evaluation Service
         run: |
-          docker build --tag eval-engine:test ./data_prepartion_pipeline/evaluation
-          echo "Docker image from ./data_prepartion_pipeline/evaluation built successfully!"
+          # 1. Build the image
+          echo "Building evaluation engine..."
+          docker build -t eval-engine:pr ./data_prepartion_pipeline/evaluation
+          
+          # 2. Run the evaluation engine container
+          echo "Starting new evaluation engine service..."
+          docker run -d --rm --name eval-service -p 5001:5001 eval-engine:pr
+          
+          # 3. Health Check Loop
+          echo "Waiting for evaluation service to be healthy..."
+          timeout=60
+          while ! curl -s http://122.160.30.222:5001/health; do
+            sleep 5
+            timeout=$((timeout-5))
+            if [ $timeout -le 0 ]; then
+              echo "Error: Service did not become healthy within 60 seconds."
+              docker logs eval-service
+              exit 1
+            fi
+          done
+          echo "Evaluation service is healthy and ready!"
+
+      - name: Run the Evaluation Script
+        env:
+          # Only the CHUNKER_URL is needed for this simple test
+          CHUNKER_URL: http://127.0.0.1:5001/start_evaluation
+        run: python ./data_prepartion_pipeline/evaluation/eval.py
