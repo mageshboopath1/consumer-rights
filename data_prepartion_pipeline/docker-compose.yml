@@ -1,0 +1,75 @@
+services:
+  chunker:
+    container_name: chunker-service
+    build: ./chunking
+    ports:
+      - "5001:5001"
+    command: gunicorn --bind 0.0.0.0:5001 chunker:app
+
+  embedder:
+    container_name: embedder-service
+    build: ./embedding
+    ports:
+      - "5002:5002"
+    command: gunicorn --bind 0.0.0.0:5002 embeder:app
+
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    volumes:
+      - airflow-db-volume:/var/lib/postgresql/data
+
+  airflow-webserver:
+    image: apache/airflow:2.9.2
+    container_name: airflow-webserver
+    depends_on:
+      - postgres
+      - chunker
+      - embedder
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+      - airflow-logs-volume:/opt/airflow/logs
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__WEBSERVER__SECRET_KEY=your-super-secret-key-change-it
+      - _PIP_ADDITIONAL_REQUIREMENTS=chromadb-client
+    command: webserver
+    networks:
+      - default
+      - shared_network
+
+  airflow-scheduler:
+    image: apache/airflow:2.9.2
+    container_name: airflow-scheduler
+    depends_on:
+      - postgres
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+      - airflow-logs-volume:/opt/airflow/logs
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - _PIP_ADDITIONAL_REQUIREMENTS=chromadb-client
+    command: scheduler
+    networks:
+      - default
+      - shared_network
+
+volumes:
+  airflow-db-volume:
+  airflow-logs-volume:
+
+networks:
+  shared_network:
+    external: true
