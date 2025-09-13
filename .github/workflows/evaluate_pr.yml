@@ -18,5 +18,5 @@ jobs:
 
       - name: Build the Docker image
         run: |
-          docker build --tag eval-engine:test ./evaluation
-          echo "Docker image from ./evaluation built successfully!"
+          docker build --tag eval-engine:test ./data_prepartion_pipeline/evaluation
+          echo "Docker image from ./data_prepartion_pipeline/evaluation built successfully!"
