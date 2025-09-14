@@ -60,7 +60,7 @@ def main():
             print(f"\n--- Question {index+1}: {question} ---")
             print("Retrieved Content:")
             for i, doc in enumerate(retrieved_docs):
-                print(f"  {i+1}. {doc.page_content[:250]}...")
+                print(f"  {i+1}. {doc.page_content}")
         
         print("\n\nEvaluation script finished successfully!")
 

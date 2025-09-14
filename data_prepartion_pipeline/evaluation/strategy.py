@@ -52,5 +52,5 @@ class NewRecursiveStrategy(BaseEvaluationChunker):
             length_function=len
         )
         chunks = text_splitter.split_text(text)
-        print("..")
+        print("....")
         return chunks
