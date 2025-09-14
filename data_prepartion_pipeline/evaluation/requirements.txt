@@ -5,3 +5,7 @@ boto3
 langchain
 gdown
 PyMuPDF
+sentence-transformers
+faiss-cpu
+pandas
+InstructorEmbedding
