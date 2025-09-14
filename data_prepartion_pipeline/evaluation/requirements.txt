@@ -3,6 +3,7 @@ gunicorn
 PyPDF2
 boto3
 langchain
+langchain-community
 gdown
 PyMuPDF
 sentence-transformers
