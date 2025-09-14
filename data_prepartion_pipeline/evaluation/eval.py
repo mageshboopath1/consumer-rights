@@ -8,7 +8,7 @@ from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 
 # --- Configuration ---
 CHUNKER_URL = os.getenv("CHUNKER_URL")
-GOLDEN_DATASET_PATH = "sample_golden_dataset.csv"
+GOLDEN_DATASET_PATH = "./data_prepartion_pipeline/evaluation/sample_golden_dataset.csv"
 
 def main():
     """
