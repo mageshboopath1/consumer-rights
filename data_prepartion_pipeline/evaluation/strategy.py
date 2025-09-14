@@ -1,5 +1,6 @@
 import gdown
 import fitz
+import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 class BaseEvaluationChunker:
@@ -13,8 +14,10 @@ class BaseEvaluationChunker:
         self.fileName : str = "consumer_rights.pdf"
 
     def _fetch_and_parse_pdf(self) -> str:
-        gdown.download(url = self.pdfUrl, output = self.fileName)
+        gdown.download(url = self.pdfUrl, output = self.fileName, fuzzy=True)
         print("Downloaded successfully!!")
+        if not os.path.exists(self.fileName) or os.path.getsize(self.fileName) == 0:
+            return "Error: Download failed, file does not exist or is empty."
         try:
             # Open the PDF file
             document = fitz.open(self.fileName)
