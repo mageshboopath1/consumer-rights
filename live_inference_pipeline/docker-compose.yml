@@ -1,5 +1,8 @@
 version: '3.8'
 
+# Load environment variables from .env file
+# Make sure to create .env from .env.example before running
+
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -70,13 +73,13 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       # DB Connection details - 'postgres' is the service name on the shared network
-      - DB_HOST=postgres
-      - DB_USER=myuser
-      - DB_PASSWORD=mypass
-      - DB_NAME=consumer_rights
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-consumer_rights}
       # RabbitMQ Connection details
-      - RABBITMQ_HOST=rabbitmq
-      - RABBITMQ_QUEUE=CUD_queue
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_QUEUE=${RABBITMQ_QUEUE:-CUD_queue}
     networks:
       - default
       - shared_network

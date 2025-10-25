@@ -148,7 +148,7 @@ def main():
             # 4. Prepare and Send Data to CUD_QUEUE for Persistence (NEW)
             history_data = {
                 "user_prompt": user_prompt, 
-                "LLM_output": output,
+                "llm_output": output,
                 "context": context,
                 "timestamp": datetime.now(timezone.utc).isoformat() # Optional: add timestamp
             }

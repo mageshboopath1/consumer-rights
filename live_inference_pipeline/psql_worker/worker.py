@@ -59,36 +59,77 @@ def get_rabbitmq_channel():
 # --- CUD Operation Logic ---
 def execute_cud_operation(db_conn, operation_data):
     """Executes the CUD operation based on the message data."""
+    from psycopg2 import sql
     cursor = db_conn.cursor()
     
     op = operation_data.get('operation', '').upper()
     table = operation_data.get('table')
     data = operation_data.get('data')
     condition = operation_data.get('condition') # Used for UPDATE/DELETE
-
+    
+    # Whitelist of allowed tables to prevent SQL injection
+    # Based on actual database schema in shared_services/chroma/postgres_init/init.sql
+    ALLOWED_TABLES = ['chat_history']
+    
     if not table or not op:
         print("ERROR: Missing 'table' or 'operation' in message.")
+        return False
+    
+    if table not in ALLOWED_TABLES:
+        print(f"ERROR: Table '{table}' is not in the allowed list.")
         return False
         
     try:
         if op == 'CREATE' and data:
-            columns = ', '.join(data.keys())
-            placeholders = ', '.join(['%s'] * len(data))
+            columns = [sql.Identifier(col) for col in data.keys()]
+            placeholders = [sql.Placeholder()] * len(data)
             values = tuple(data.values())
-            sql = f"INSERT INTO {table} ({columns}) VALUES ({placeholders})"
-            cursor.execute(sql, values)
+            
+            query = sql.SQL("INSERT INTO {} ({}) VALUES ({})").format(
+                sql.Identifier(table),
+                sql.SQL(', ').join(columns),
+                sql.SQL(', ').join(placeholders)
+            )
+            cursor.execute(query, values)
             print(f"SUCCESS: Created record in table {table}.")
             
         elif op == 'UPDATE' and data and condition:
-            set_clauses = ', '.join([f"{col} = %s" for col in data.keys()])
-            values = tuple(data.values())
-            sql = f"UPDATE {table} SET {set_clauses} WHERE {condition}"
-            cursor.execute(sql, values)
+            # Parse condition safely - expecting format: {"column": "value"}
+            if not isinstance(condition, dict) or len(condition) != 1:
+                print("ERROR: Condition must be a dict with exactly one key-value pair.")
+                return False
+            
+            condition_col = list(condition.keys())[0]
+            condition_val = list(condition.values())[0]
+            
+            set_clauses = [sql.SQL("{} = {}").format(sql.Identifier(col), sql.Placeholder()) 
+                          for col in data.keys()]
+            values = tuple(data.values()) + (condition_val,)
+            
+            query = sql.SQL("UPDATE {} SET {} WHERE {} = {}").format(
+                sql.Identifier(table),
+                sql.SQL(', ').join(set_clauses),
+                sql.Identifier(condition_col),
+                sql.Placeholder()
+            )
+            cursor.execute(query, values)
             print(f"SUCCESS: Updated {cursor.rowcount} records in table {table}.")
 
         elif op == 'DELETE' and condition:
-            sql = f"DELETE FROM {table} WHERE {condition}"
-            cursor.execute(sql)
+            # Parse condition safely - expecting format: {"column": "value"}
+            if not isinstance(condition, dict) or len(condition) != 1:
+                print("ERROR: Condition must be a dict with exactly one key-value pair.")
+                return False
+            
+            condition_col = list(condition.keys())[0]
+            condition_val = list(condition.values())[0]
+            
+            query = sql.SQL("DELETE FROM {} WHERE {} = {}").format(
+                sql.Identifier(table),
+                sql.Identifier(condition_col),
+                sql.Placeholder()
+            )
+            cursor.execute(query, (condition_val,))
             print(f"SUCCESS: Deleted {cursor.rowcount} records from table {table}.")
 
         else:

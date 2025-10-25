@@ -15,24 +15,56 @@ PROCESS_QUEUE = 'process_updates'
 CHROMA_HOST = os.getenv('CHROMA_HOST', 'chroma_service')
 CHROMA_PORT = int(os.getenv('CHROMA_PORT', 8000))
 
+# Load the model once at startup to avoid loading on every request
+print("[i] Loading sentence transformer model at startup...")
+MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+print("[i] Model loaded successfully.")
+
+# Create ChromaDB client and collection once at startup
+print("[i] Initializing ChromaDB client and collection at startup...")
+CHROMA_CLIENT = None
+COLLECTION = None
+
+def init_chromadb():
+    """Initialize ChromaDB client and collection at startup"""
+    global CHROMA_CLIENT, COLLECTION
+    try:
+        CHROMA_CLIENT = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
+        collection_name = "document_embeddings"
+        
+        # Try to get or create collection
+        try:
+            COLLECTION = CHROMA_CLIENT.get_collection(name=collection_name)
+            print(f"[+] Found existing collection '{collection_name}' with {COLLECTION.count()} documents")
+        except Exception:
+            print(f"[i] Collection '{collection_name}' not found. Creating it...")
+            COLLECTION = CHROMA_CLIENT.create_collection(name=collection_name)
+            print(f"[+] Collection '{collection_name}' created (empty - add documents to use)")
+        
+        return True
+    except Exception as e:
+        print(f"[!] Failed to initialize ChromaDB: {e}", file=sys.stderr)
+        return False
+
 def run_rag_query(user_query: str, channel) -> str:
     """
     Performs a RAG query by embedding the user's query, searching a ChromaDB
     collection for relevant documents, and constructing a final prompt.
     """
     try:
-        client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
-        collection_name = "document_embeddings"
-        
-        try:
-            collection = client.get_collection(name=collection_name)
-        except Exception as e:
-            print(f"Collection '{collection_name}' not found. Error: {e}", file=sys.stderr)
-            return "No relevant documents found in the knowledge base."
+        # Use the global collection initialized at startup
+        if COLLECTION is None:
+            print(f"[!] Collection not initialized", file=sys.stderr)
+            context = "No relevant documents found in the knowledge base. Please add documents using the data preparation pipeline first."
+            prompt = (
+                "You are a legal assistant. The knowledge base is currently empty. "
+                "Please inform the user that documents need to be added to the system before queries can be answered.\n\n"
+                f"User Question: {user_query}\n"
+            )
+            return prompt
 
-        print("[i] Loading sentence transformer model...")
-        model = SentenceTransformer('all-MiniLM-L6-v2')
-        query_embedding = model.encode(user_query, convert_to_tensor=False).tolist()
+        # Use the pre-loaded model instead of loading on every request
+        query_embedding = MODEL.encode(user_query, convert_to_tensor=False).tolist()
         print("[i] Query embedded successfully.")
 
         status_payload_1 = {
@@ -43,7 +75,7 @@ def run_rag_query(user_query: str, channel) -> str:
         channel.basic_publish(exchange='', routing_key=PROCESS_QUEUE, body=json.dumps(status_payload_1))
         print(f"[>] Sent status update to '{PROCESS_QUEUE}': Vector Embedding complete")
 
-        search_results = collection.query(
+        search_results = COLLECTION.query(
             query_embeddings=[query_embedding],
             n_results=3,
         )
@@ -128,12 +160,13 @@ def main():
 
 if __name__ == '__main__':
     try:
+        # Wait for ChromaDB to be ready
         for i in range(10):
             try:
                 print(f"[*] Attempting to connect to ChromaDB (attempt {i+1}/10)...")
-                client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
-                client.heartbeat()
-                print("[+] Successfully connected to ChromaDB.")
+                import requests
+                response = requests.get(f"http://{CHROMA_HOST}:{CHROMA_PORT}/api/v1")
+                print("[+] ChromaDB is reachable.")
                 break
             except Exception as e:
                 print(f"[-] ChromaDB not ready yet. Retrying in 5 seconds... Error: {e}", file=sys.stderr)
@@ -141,6 +174,11 @@ if __name__ == '__main__':
         else:
              print("[-] Could not connect to ChromaDB after several attempts. Exiting.", file=sys.stderr)
              sys.exit(1)
+        
+        # Initialize ChromaDB client and collection
+        if not init_chromadb():
+            print("[-] Failed to initialize ChromaDB. Exiting.", file=sys.stderr)
+            sys.exit(1)
 
         main()
     except KeyboardInterrupt:

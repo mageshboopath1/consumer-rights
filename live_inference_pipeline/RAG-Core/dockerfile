@@ -4,6 +4,6 @@ WORKDIR /app
 
 COPY . /app
 
-RUN pip install --no-cache-dir pika chromadb-client sentence-transformers==2.7.0
+RUN pip install --no-cache-dir pika==1.3.2 numpy==1.24.3 chromadb==0.5.23 sentence-transformers==2.7.0
 
 CMD ["python", "core.py"]

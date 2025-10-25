@@ -1,6 +1,9 @@
+# Load environment variables from .env file
+# Make sure to create .env from .env.example before running
+
 services:
   chroma:
-    image: ghcr.io/chroma-core/chroma:latest
+    image: ghcr.io/chroma-core/chroma:0.5.23
     container_name: chroma_service
     ports:
       - "8002:8000"
@@ -15,9 +18,9 @@ services:
     image: postgres:13
     container_name: postgres_service
     environment:
-      - POSTGRES_USER=myuser      # Change as needed
-      - POSTGRES_PASSWORD=mypass  # Change as needed
-      - POSTGRES_DB=consumer_rights      # Change as needed
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-consumer_rights}
     volumes:
       - consumer_rights_data:/var/lib/postgresql/data
       - ./postgres_init:/docker-entrypoint-initdb.d
