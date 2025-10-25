@@ -1,0 +1,87 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'live_inference_pipeline/**'
+      - 'shared_services/**'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REGISTRY: 692461731109.dkr.ecr.ap-south-1.amazonaws.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+    
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    
+    - name: Build and push pii-filter
+      working-directory: ./live_inference_pipeline/PII
+      run: |
+        docker build -t consumer-rights/pii-filter .
+        docker tag consumer-rights/pii-filter:latest ${{ env.ECR_REGISTRY }}/consumer-rights/pii-filter:latest
+        docker push ${{ env.ECR_REGISTRY }}/consumer-rights/pii-filter:latest
+    
+    - name: Build and push rag-core
+      working-directory: ./live_inference_pipeline/RAG-Core
+      run: |
+        docker build -t consumer-rights/rag-core .
+        docker tag consumer-rights/rag-core:latest ${{ env.ECR_REGISTRY }}/consumer-rights/rag-core:latest
+        docker push ${{ env.ECR_REGISTRY }}/consumer-rights/rag-core:latest
+    
+    - name: Build and push llm-connector
+      working-directory: ./live_inference_pipeline/LLM-Connector
+      run: |
+        docker build -t consumer-rights/llm-connector .
+        docker tag consumer-rights/llm-connector:latest ${{ env.ECR_REGISTRY }}/consumer-rights/llm-connector:latest
+        docker push ${{ env.ECR_REGISTRY }}/consumer-rights/llm-connector:latest
+    
+    - name: Build and push psql-worker
+      working-directory: ./live_inference_pipeline/psql_worker
+      run: |
+        docker build -t consumer-rights/psql-worker .
+        docker tag consumer-rights/psql-worker:latest ${{ env.ECR_REGISTRY }}/consumer-rights/psql-worker:latest
+        docker push ${{ env.ECR_REGISTRY }}/consumer-rights/psql-worker:latest
+    
+    - name: Deploy to EC2
+      env:
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_KEY: ${{ secrets.EC2_SSH_KEY }}
+      run: |
+        # Save SSH key
+        echo "$EC2_KEY" > ec2-key.pem
+        chmod 400 ec2-key.pem
+        
+        # Deploy to EC2
+        ssh -i ec2-key.pem -o StrictHostKeyChecking=no ubuntu@$EC2_HOST << 'EOF'
+          cd consumer-rights/live_inference_pipeline
+          
+          # Login to ECR
+          aws ecr get-login-password --region ap-south-1 | \
+            docker login --username AWS --password-stdin 692461731109.dkr.ecr.ap-south-1.amazonaws.com
+          
+          # Pull latest images
+          docker-compose pull
+          
+          # Restart services
+          docker-compose up -d
+          
+          # Show status
+          docker ps
+        EOF
