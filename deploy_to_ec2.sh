@@ -12,7 +12,7 @@ echo ""
 # Configuration
 REGION="ap-south-1"
 INSTANCE_TYPE="t3.small"
-AMI_ID="ami-0c55b159cbfafe1f0"  # Ubuntu 22.04 LTS in ap-south-1
+AMI_ID="ami-087d1c9a513324697"  # Ubuntu 22.04 LTS in ap-south-1 (latest)
 KEY_NAME="consumer-rights-key"
 SECURITY_GROUP_NAME="consumer-rights-sg"
 VOLUME_SIZE=20
@@ -273,8 +273,8 @@ INSTANCE_ID=$(aws ec2 run-instances \
         \"MarketType\": \"spot\",
         \"SpotOptions\": {
             \"MaxPrice\": \"$MAX_SPOT_PRICE\",
-            \"SpotInstanceType\": \"persistent\",
-            \"InstanceInterruptionBehavior\": \"stop\"
+            \"SpotInstanceType\": \"one-time\",
+            \"InstanceInterruptionBehavior\": \"terminate\"
         }
     }" \
     --block-device-mappings "[
