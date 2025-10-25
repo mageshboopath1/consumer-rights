@@ -19,18 +19,6 @@ services:
       - default
       - shared_network
 
-  ollama:
-    build: ./ollama
-    container_name: ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ./ollama_data:/root/.ollama
-    healthcheck:
-        test: ["CMD", "ollama", "ps"]
-        interval: 10s
-        timeout: 5s
-        retries: 5
 
   pii-filter:
     build: ./PII
@@ -59,10 +47,14 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
-      ollama:
-        condition: service_healthy
     environment:
       - PYTHONUNBUFFERED=1
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - BEDROCK_MODEL_ID=${BEDROCK_MODEL_ID:-meta.llama3-70b-instruct-v1:0}
+      - BEDROCK_MAX_TOKENS=${BEDROCK_MAX_TOKENS:-512}
+      - BEDROCK_TEMPERATURE=${BEDROCK_TEMPERATURE:-0.7}
   
   psql-worker:
     build: ./psql_worker # Directory where your Dockerfile and code live
