@@ -3,16 +3,19 @@ import time
 import os
 import sys
 import chromadb
+import json
+from datetime import datetime, timezone
 from sentence_transformers import SentenceTransformer
 
 RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'rabbitmq')
 CONSUME_QUEUE = 'redacted_queue'
 PUBLISH_QUEUE = 'query_and_context'
+PROCESS_QUEUE = 'process_updates'
 
 CHROMA_HOST = os.getenv('CHROMA_HOST', 'chroma_service')
 CHROMA_PORT = int(os.getenv('CHROMA_PORT', 8000))
 
-def run_rag_query(user_query: str) -> str:
+def run_rag_query(user_query: str, channel) -> str:
     """
     Performs a RAG query by embedding the user's query, searching a ChromaDB
     collection for relevant documents, and constructing a final prompt.
@@ -32,10 +35,26 @@ def run_rag_query(user_query: str) -> str:
         query_embedding = model.encode(user_query, convert_to_tensor=False).tolist()
         print("[i] Query embedded successfully.")
 
+        status_payload_1 = {
+            "type": "stage_complete", 
+            "stage": "vector_embedding",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        channel.basic_publish(exchange='', routing_key=PROCESS_QUEUE, body=json.dumps(status_payload_1))
+        print(f"[>] Sent status update to '{PROCESS_QUEUE}': Vector Embedding complete")
+
         search_results = collection.query(
             query_embeddings=[query_embedding],
             n_results=3,
         )
+
+        status_payload_2 = {
+            "type": "stage_complete", 
+            "stage": "contextual_retrieval",
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        }
+        channel.basic_publish(exchange='', routing_key=PROCESS_QUEUE, body=json.dumps(status_payload_2))
+        print(f"[>] Sent status update to '{PROCESS_QUEUE}': Contextual Retrieval complete")
 
         retrieved_documents = search_results.get('documents', [])
         
@@ -46,9 +65,7 @@ def run_rag_query(user_query: str) -> str:
             print(f"[i] Retrieved context: {context[:100]}...")
 
         prompt = (
-            "Given the following context, please answer the question. "
-            "If the answer is not present in the context, please state that "
-            "and do not try to make up an answer.\n\n"
+            "You are a legal assistant. Based *only* on the following context, answer the user's question. Pay close attention to any exceptions or contradictions mentioned. If the context does not contain the answer, say so.\n\n"
             f"Context:\n{context}\n\n"
             f"Question:\n{user_query}\n"
         )
@@ -75,15 +92,15 @@ def main():
 
     channel = connection.channel()
 
-    channel.queue_declare(queue=CONSUME_QUEUE, durable=True)
-    channel.queue_declare(queue=PUBLISH_QUEUE, durable=True)
+    channel.queue_declare(queue=CONSUME_QUEUE, durable=False)
+    channel.queue_declare(queue=PUBLISH_QUEUE, durable=False)
 
     def callback(ch, method, properties, body):
         try:
             user_query = body.decode()
             print(f"\n[x] Received from '{CONSUME_QUEUE}': '{user_query}'")
 
-            final_prompt = run_rag_query(user_query)
+            final_prompt = run_rag_query(user_query, ch)
 
             if final_prompt:
                 channel.basic_publish(

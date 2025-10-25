@@ -3,13 +3,31 @@ services:
     image: ghcr.io/chroma-core/chroma:latest
     container_name: chroma_service
     ports:
-      - "8000:8000"
+      - "8002:8000"
     volumes:
       - ./chroma_data:/data
     environment:
       - IS_PERSISTENT=TRUE
     networks:
       - shared_network
+
+  postgres:
+    image: postgres:13
+    container_name: postgres_service
+    environment:
+      - POSTGRES_USER=myuser      # Change as needed
+      - POSTGRES_PASSWORD=mypass  # Change as needed
+      - POSTGRES_DB=consumer_rights      # Change as needed
+    volumes:
+      - consumer_rights_data:/var/lib/postgresql/data
+      - ./postgres_init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432" # Expose the standard PostgreSQL port
+    networks:
+      - shared_network # Make sure it's on the shared network
+
+volumes:
+  consumer_rights_data: {}
 
 networks:
   shared_network:

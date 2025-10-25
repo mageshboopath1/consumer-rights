@@ -12,6 +12,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks: # <-- ADD THIS BLOCK
+      - default
+      - shared_network
 
   ollama:
     build: ./ollama
@@ -57,6 +60,26 @@ services:
         condition: service_healthy
     environment:
       - PYTHONUNBUFFERED=1
+  
+  psql-worker:
+    build: ./psql_worker # Directory where your Dockerfile and code live
+    container_name: psql_worker
+    depends_on:
+      rabbitmq:
+        condition: service_healthy # Wait for RabbitMQ to be ready
+    environment:
+      - PYTHONUNBUFFERED=1
+      # DB Connection details - 'postgres' is the service name on the shared network
+      - DB_HOST=postgres
+      - DB_USER=myuser
+      - DB_PASSWORD=mypass
+      - DB_NAME=consumer_rights
+      # RabbitMQ Connection details
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_QUEUE=CUD_queue
+    networks:
+      - default
+      - shared_network
 
 networks:
   default:

@@ -2,6 +2,8 @@ import pika
 import sys
 import time
 import re
+import json
+from datetime import datetime, timezone
 
 connection = None
 for i in range(10):
@@ -20,9 +22,11 @@ if not connection:
 
 channel = connection.channel()
 
-channel.queue_declare(queue='terminal_messages', durable=True)
+channel.queue_declare(queue='terminal_messages', durable=False)
 
-channel.queue_declare(queue='redacted_queue', durable=True)
+channel.queue_declare(queue='redacted_queue', durable=False)
+
+channel.queue_declare(queue='process_updates', durable=False)
 
 channel.basic_qos(prefetch_count=1)
 print(' [*] pii-filter service is waiting for messages...')
@@ -39,6 +43,18 @@ def process_message(body):
     redacted_text = re.sub(email_regex, "[EMAIL]", text)
     redacted_text = re.sub(phone_regex, "[PHONE]", redacted_text)
     redacted_text = re.sub(name_regex, "[NAME]", redacted_text)
+
+    status_payload = {
+        "type": "stage_complete", 
+        "stage": "pii_filter",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    channel.basic_publish(
+        exchange='',
+        routing_key='process_updates',
+        body=json.dumps(status_payload)
+    )
+    print(f" [>] Sent status update to 'process_updates'")
     
     channel.basic_publish(
         exchange='',
