@@ -44,6 +44,8 @@ jobs:
           echo "[4/7] Checking for changes..."
           if [ "$PREV_COMMIT" = "$CURR_COMMIT" ]; then
             echo "No changes detected. Skipping rebuild."
+            echo "Deployment completed successfully!"
+            echo "Services are already up to date"
             exit 0
           fi
           
@@ -63,6 +65,8 @@ jobs:
           
           if [ "$NEEDS_REBUILD" = "false" ]; then
             echo "No service changes detected. Skipping rebuild."
+            echo "Deployment completed successfully!"
+            echo "Services are already up to date"
             exit 0
           fi
           
