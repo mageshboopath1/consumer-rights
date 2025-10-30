@@ -1,0 +1,111 @@
+{
+  "collection_name": "exp_naive_256_100_a3204ba1",
+  "num_test_cases": 5,
+  "num_valid_results": 4,
+  "aggregate_metrics": {
+    "answer_relevancy": 0.75,
+    "contextual_precision": 0.8333333333333333,
+    "contextual_recall": 1.0,
+    "faithfulness": 1.0
+  },
+  "aggregate_timing": {
+    "avg_retrieval_time_ms": 351.9739627838135,
+    "avg_generation_time_ms": 1917.1217918395996,
+    "total_time_ms": 11345.478773117065
+  },
+  "individual_results": [
+    {
+      "test_case_id": 0,
+      "query": "What is the purpose of the Central Consumer Protection Authority as per the Consumer Protection Act, 2019?",
+      "actual_output": "The context does not contain the answer to the question about the purpose of the Central Consumer Protection Authority as per the Consumer Protection Act, 2019. It mentions the functions of the Central Authority, but not the Central Consumer Protection Authority.",
+      "expected_output": "The Central Consumer Protection Authority has powers and functions including investigation, recall of goods, and issuing directions and penalties against false or misleading advertisements, as outlined in sections 18 to 22 of the Act.",
+      "context": [
+        "nctions of Central Authority.\u2014(1) The Central Authority shall\u2014 (a) protect, promote and enforce the rights of consumers as a class, and prevent violation of consumers rights under this Act; (b) prevent unfair trade practices and ensure that no person engag",
+        " Central Council.\u2014The objects of the Central Council shall be to render advice on promotion and protection of the consumers' rights under this Act. 6. State Consumer Protection Councils.\u2014(1) Every State Government shall, by notification, establish with eff",
+        "Central Consumer Protection Council to be known as the Central Council. (2) The Central Council shall be an advisory council and consist of the following members, namely:\u2014 (a) the Minister-in-charge of the Department of Consumer Affairs in the Central Gove"
+      ],
+      "metrics": {
+        "answer_relevancy": 0.0,
+        "contextual_precision": 1.0,
+        "contextual_recall": 1.0,
+        "faithfulness": 1.0
+      },
+      "timing": {
+        "retrieval_time_ms": 35.02392768859863,
+        "generation_time_ms": 2047.800064086914,
+        "total_time_ms": 2082.8239917755127
+      }
+    },
+    {
+      "test_case_id": 1,
+      "query": "What happens if a consumer is not satisfied with the order of the District Commission?",
+      "actual_output": "The consumer can prefer an appeal against the order of the District Commission to the State Commission.",
+      "expected_output": "According to the document, the consumer can appeal against the order of the District Commission, as stated in section 41.",
+      "context": [
+        "order of a District Commission or the State Commission or the National Commission, as the case may be, shall, if no appeal has been preferred against such order under the provisions of this Act, be final. 69. Limitation period.\u2014(1) The District Commission,",
+        "action to represent his case within the time given by the District Commission, proceed to settle the consumer dispute in the manner specified in clauses (c) to (g); (c) if the complaint alleges a defect in the goods which cannot be determined without prope",
+        "plication made by any of the parties within thirty days of such order. 41. Appeal against order of District Commission.\u2014Any person aggrieved by an order made by the District Commission may prefer an appeal against such order to the State Commission on the "
+      ],
+      "metrics": {
+        "answer_relevancy": 1.0,
+        "contextual_precision": 0.3333333333333333,
+        "contextual_recall": 1.0,
+        "faithfulness": 1.0
+      },
+      "timing": {
+        "retrieval_time_ms": 356.2178611755371,
+        "generation_time_ms": 1886.9297504425049,
+        "total_time_ms": 2243.147611618042
+      }
+    },
+    {
+      "test_case_id": 2,
+      "query": "What chapter of the Consumer Protection Act, 2019 deals with product liability?",
+      "actual_output": "CHAPTER VI of the Consumer Protection Act, 2019 deals with product liability.",
+      "expected_output": "According to the document, Chapter VI of the Consumer Protection Act, 2019 deals with product liability.",
+      "context": [
+        "1 THE CONSUMER PROTECTION ACT, 2019 ____________ ARRANGEMENT OF SECTIONS Last Updated:17-9-2021 ____________ CHAPTER I PRELIMINARY SECTIONS 1. Short title, extent, commencement and application. 2. Definitions. CHAPTER II CONSUMER PROTECTION COUNCILS. 3. Ce",
+        "he State Commission or the National Commission, as the case may be, shall continue to hear all the issues involved in such consumer dispute. CHAPTER VI PRODUCT LIABILITY 82. Application of Chapter.\u2014This Chapter shall apply to every claim for compensation u",
+        "or product liability action lies against the product manufacturer, product seller or product service provider, as the case may be; (7) \u201cconsumer\u201d means any person who\u2014 (i) buys any goods for a consideration which has been paid or promised or partly paid an"
+      ],
+      "metrics": {
+        "answer_relevancy": 1.0,
+        "contextual_precision": 1.0,
+        "contextual_recall": 1.0,
+        "faithfulness": 1.0
+      },
+      "timing": {
+        "retrieval_time_ms": 413.72013092041016,
+        "generation_time_ms": 1812.0980262756348,
+        "total_time_ms": 2225.818157196045
+      }
+    },
+    {
+      "test_case_id": 3,
+      "query": "To what extent does the Consumer Protection Act, 2019 apply in India?",
+      "actual_output": "The Consumer Protection Act, 2019 extends to the whole of India except the State of Jammu and Kashmir.",
+      "expected_output": "The Consumer Protection Act, 2019 extends to the whole of India except the State of Jammu and Kashmir.",
+      "context": [
+        ". Short title, extent, commencement and application.\u2014(1) This Act may be called the Consumer Protection Act, 2019. (2) It extends to the whole of India except the State of Jammu and Kashmir*. (3) It shall come into force on such date1 as the Central Govern",
+        "1 THE CONSUMER PROTECTION ACT, 2019 ____________ ARRANGEMENT OF SECTIONS Last Updated:17-9-2021 ____________ CHAPTER I PRELIMINARY SECTIONS 1. Short title, extent, commencement and application. 2. Definitions. CHAPTER II CONSUMER PROTECTION COUNCILS. 3. Ce",
+        "overned by the provisions of the Consumer Protection Act, 1986 (68 of 1986) and the rules made there under as if this Act had not come into force. 57. Other officers and employees of National Commission.\u2014(1) The Central Government shall provide, in consult"
+      ],
+      "metrics": {
+        "answer_relevancy": 1.0,
+        "contextual_precision": 1.0,
+        "contextual_recall": 1.0,
+        "faithfulness": 1.0
+      },
+      "timing": {
+        "retrieval_time_ms": 526.3712406158447,
+        "generation_time_ms": 1823.0979442596436,
+        "total_time_ms": 2349.4691848754883
+      }
+    },
+    {
+      "test_case_id": 4,
+      "query": "When was the Act made applicable to the Union territory of Jammu and Kashmir and the Union territory of Ladakh?",
+      "error": "1 validation error for Verdicts\nverdicts\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"
+    }
+  ]
+}

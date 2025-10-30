@@ -1,0 +1,16 @@
+artifact_uri: mlflow-artifacts:/385624843665828516/9e46296cfc67474eac847294db89a0d5/artifacts
+deleted_time: 1761699560151
+end_time: 1761697236185
+entry_point_name: ''
+experiment_id: '385624843665828516'
+lifecycle_stage: deleted
+run_id: 9e46296cfc67474eac847294db89a0d5
+run_name: naive_size256_overlap50
+run_uuid: 9e46296cfc67474eac847294db89a0d5
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1761697179887
+status: 4
+tags: []
+user_id: mageshboopathi

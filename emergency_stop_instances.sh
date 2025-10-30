@@ -22,9 +22,9 @@ if [ -n "$SPOT_REQUESTS" ]; then
   aws ec2 cancel-spot-instance-requests \
     --spot-instance-request-ids $SPOT_REQUESTS \
     --region $REGION
-  echo "✅ Cancelled all spot requests"
+  echo " Cancelled all spot requests"
 else
-  echo "✅ No active spot requests found"
+  echo " No active spot requests found"
 fi
 echo ""
 
@@ -41,9 +41,9 @@ if [ -n "$UNNAMED_INSTANCES" ]; then
   aws ec2 terminate-instances \
     --instance-ids $UNNAMED_INSTANCES \
     --region $REGION
-  echo "✅ Terminated unnamed instances"
+  echo " Terminated unnamed instances"
 else
-  echo "✅ No unnamed instances found"
+  echo " No unnamed instances found"
 fi
 echo ""
 
@@ -66,7 +66,7 @@ aws ec2 describe-spot-instance-requests \
 echo ""
 
 echo "=========================================="
-echo "✅ Emergency Stop Complete"
+echo " Emergency Stop Complete"
 echo "=========================================="
 echo ""
 echo "What happened:"

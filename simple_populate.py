@@ -20,34 +20,36 @@ chunks = [
     "Mediation is available as an alternative dispute resolution mechanism.",
     "The Act provides for penalties for manufacturing or selling spurious goods.",
     "Consumer rights include the right to be informed, right to choose, and right to be heard.",
-    "The Act came into force on July 20, 2020."
+    "The Act came into force on July 20, 2020.",
 ]
 
 print(f"Populating ChromaDB with {len(chunks)} sample chunks...")
 
 try:
     # Connect to ChromaDB
-    client = chromadb.HttpClient(host='chroma_service', port=8000)
-    collection = client.get_or_create_collection(name='document_embeddings')
-    
+    client = chromadb.HttpClient(host="chroma_service", port=8000)
+    collection = client.get_or_create_collection(name="document_embeddings")
+
     # Load embedding model
     from sentence_transformers import SentenceTransformer
-    model = SentenceTransformer('all-MiniLM-L6-v2')
-    
+
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+
     # Generate embeddings
     print("Generating embeddings...")
     embeddings = model.encode(chunks, convert_to_tensor=False).tolist()
-    
+
     # Generate IDs
     ids = [str(uuid.uuid4()) for _ in chunks]
-    
+
     # Add to collection
     print("Adding to ChromaDB...")
     collection.add(embeddings=embeddings, documents=chunks, ids=ids)
-    
+
     print(f"SUCCESS! Collection now has {collection.count()} documents")
-    
+
 except Exception as e:
     print(f"ERROR: {e}")
     import traceback
+
     traceback.print_exc()

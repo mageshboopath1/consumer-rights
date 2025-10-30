@@ -1,0 +1,94 @@
+{
+  "collection_name": "exp_naive_512_50_7a1daaee",
+  "num_test_cases": 5,
+  "num_valid_results": 3,
+  "aggregate_metrics": {
+    "answer_relevancy": 0.6666666666666666,
+    "contextual_precision": 0.6666666666666666,
+    "contextual_recall": 1.0,
+    "faithfulness": 1.0
+  },
+  "aggregate_timing": {
+    "avg_retrieval_time_ms": 454.6710014343262,
+    "avg_generation_time_ms": 2590.2291774749756,
+    "total_time_ms": 15224.500894546509
+  },
+  "individual_results": [
+    {
+      "test_case_id": 0,
+      "query": "What is the purpose of the Central Consumer Protection Authority as per the Consumer Protection Act, 2019?",
+      "actual_output": "The purpose of the Central Consumer Protection Authority is to regulate matters relating to violation of rights of consumers, unfair trade practices, and false or misleading advertisements, and to promote, protect, and enforce the rights of consumers as a class. Specifically, its functions include protecting and enforcing consumer rights, preventing unfair trade practices, and ensuring that no false or misleading advertisements are made.",
+      "expected_output": "The Central Consumer Protection Authority has powers and functions including investigation, recall of goods, and issuing directions and penalties against false or misleading advertisements, as outlined in sections 18 to 22 of the Act.",
+      "context": [
+        "al Government shall, by notification, establish with effect from such date as it may specify in that notification, a Central Consumer Protection Authority to be known as the Central Authority to regulate matters relating to violation of rights of consumers, unfair trade practices and false or misleading advertisements which are prejudicial to the interests of public and consumers and to promote, protect and enforce the rights of consumers as a class. (2) The Central Authority shall consist of a Chief Commis",
+        "ner of regional office or the Central Authority. 18. Powers and functions of Central Authority.\u2014(1) The Central Authority shall\u2014 (a) protect, promote and enforce the rights of consumers as a class, and prevent violation of consumers rights under this Act; (b) prevent unfair trade practices and ensure that no person engages himself in unfair trade practices; (c) ensure that no false or misleading advertisement is made of any goods or services which contravenes the provisions of this Act or the rules or regul",
+        "58, s. 88, 89, 92 and 93, 94, 96, 97 and 99, clause (f) to (m) of sub-section 2 and clauses (zg), (zh) and (zi) of sub-section 2 of s. 101, 104, vide notification No. S.O. 2421(E), dated 23rd July 2020, see Gazette of India, Extraordinary, Part II, sec. 3(ii). 5 (4) \u201cCentral Authority\u201d means the Central Consumer Protection Authority established under section 10; (5) \u201ccomplainant\u201d means\u2014 (i) a consumer; or (ii) any voluntary consumer association registered under any law for the time being in force; or (iii) "
+      ],
+      "metrics": {
+        "answer_relevancy": 1.0,
+        "contextual_precision": 1.0,
+        "contextual_recall": 1.0,
+        "faithfulness": 1.0
+      },
+      "timing": {
+        "retrieval_time_ms": 244.68040466308594,
+        "generation_time_ms": 5104.843616485596,
+        "total_time_ms": 5349.524021148682
+      }
+    },
+    {
+      "test_case_id": 1,
+      "query": "What happens if a consumer is not satisfied with the order of the District Commission?",
+      "actual_output": "The context does not contain the answer. It discusses the establishment and procedures of the District Commission, State Commission, and National Commission, but does not mention the process for appealing an order or what happens if a consumer is not satisfied with the order of the District Commission.",
+      "expected_output": "According to the document, the consumer can appeal against the order of the District Commission, as stated in section 41.",
+      "context": [
+        "same to the concerned Commission. 81. Recording settlement and passing of order.\u2014(1) The District Commission or the State Commission or the National Commission, as the case may be, shall, within seven days of the receipt of the settlement report, pass suitable order recording such settlement of consumer dispute and dispose of the matter accordingly. (2) Where the consumer dispute is settled only in part, the District Commission or the State Commission or the National Commission, as the case may be, shall re",
+        "RESSAL COMMISSION 28. Establishment of District Consumer Disputes Redressal Commission.\u2014(1) The State Government shall, by notification, establish a District Consumer Disputes Redressal Commission, to be known as the District Commission, in each district of the State: Provided that the State Government may, if it deems fit, establish more than one District Commission in a district. 18 (2) Each District Commission shall consist of\u2014 (a) a President; and (b) not less than two and not more than such number of m",
+        "r that the State Commission or the National Commission, as the case may be, shall make such orders as to the costs occasioned by the adjournment, as may be specified by regulations: Provided also that in the event of an appeal being disposed of after the period so specified, the State Commission or the National Commission, as the case may be, shall record in writing the reasons for the same at the time of disposing of the said appeal. 53. Establishment of National Consumer Disputes Redressal Commission.\u2014(1)"
+      ],
+      "metrics": {
+        "answer_relevancy": 0.0,
+        "contextual_precision": 0,
+        "contextual_recall": 1.0,
+        "faithfulness": 1.0
+      },
+      "timing": {
+        "retrieval_time_ms": 554.0757179260254,
+        "generation_time_ms": 2086.5190029144287,
+        "total_time_ms": 2640.594720840454
+      }
+    },
+    {
+      "test_case_id": 2,
+      "query": "What chapter of the Consumer Protection Act, 2019 deals with product liability?",
+      "actual_output": "Chapter VI of the Consumer Protection Act, 2019 deals with product liability.",
+      "expected_output": "According to the document, Chapter VI of the Consumer Protection Act, 2019 deals with product liability.",
+      "context": [
+        "1. Recording settlement and passing of order. CHAPTER VI PRODUCT LIABILLITY 82. Application of Chapter. 83. Product liability action 84. Liability of product manufacturer. 85. Liability of product service provider. 86. Liability of product sellers. 87. Exceptions to product liability action. CHAPTER VII OFFENCES AND PENALTIES 88. Penalty for non-compliance of direction of Central Authority. 89. Punishment for false or misleading advertisement. 90. Punishment for manufacturing for sale or storing, selling or",
+        " National Commission, as the case may be, shall record settlement of the issues which have been so settled and continue to hear other issues involved in such consumer dispute. (3) Where the consumer dispute could not be settled by mediation, the District Commission or the State Commission or the National Commission, as the case may be, shall continue to hear all the issues involved in such consumer dispute. CHAPTER VI PRODUCT LIABILITY 82. Application of Chapter.\u2014This Chapter shall apply to every claim for ",
+        "1 THE CONSUMER PROTECTION ACT, 2019 ____________ ARRANGEMENT OF SECTIONS Last Updated:17-9-2021 ____________ CHAPTER I PRELIMINARY SECTIONS 1. Short title, extent, commencement and application. 2. Definitions. CHAPTER II CONSUMER PROTECTION COUNCILS. 3. Central Consumer Protection Council. 4. Procedure for meetings of Central Council. 5. Objects of Central Council. 6. State Consumer Protection Councils. 7. Objects of State Council. 8. District Consumer Protection Council. 9. Objects of District Council. CHA"
+      ],
+      "metrics": {
+        "answer_relevancy": 1.0,
+        "contextual_precision": 1.0,
+        "contextual_recall": 1.0,
+        "faithfulness": 1.0
+      },
+      "timing": {
+        "retrieval_time_ms": 409.13987159729004,
+        "generation_time_ms": 1920.861005783081,
+        "total_time_ms": 2330.000877380371
+      }
+    },
+    {
+      "test_case_id": 3,
+      "query": "To what extent does the Consumer Protection Act, 2019 apply in India?",
+      "error": "1 validation error for Verdicts\nverdicts\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"
+    },
+    {
+      "test_case_id": 4,
+      "query": "When was the Act made applicable to the Union territory of Jammu and Kashmir and the Union territory of Ladakh?",
+      "error": "1 validation error for Verdicts\nverdicts\n  Field required [type=missing, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.12/v/missing"
+    }
+  ]
+}

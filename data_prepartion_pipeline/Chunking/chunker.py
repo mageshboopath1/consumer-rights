@@ -7,6 +7,7 @@ import fitz
 
 app = Flask(__name__)
 
+
 def chunk_document(file_stream, chunk_size: int = 500, overlap: int = 50) -> List[str]:
     """
     Reads a PDF file from a stream, extracts text, and splits it into chunks.
@@ -16,7 +17,7 @@ def chunk_document(file_stream, chunk_size: int = 500, overlap: int = 50) -> Lis
     for page in doc:
         full_text += page.get_text()
 
-    full_text = re.sub(r'\s+', ' ', full_text).strip()
+    full_text = re.sub(r"\s+", " ", full_text).strip()
 
     if not full_text:
         return []
@@ -33,20 +34,21 @@ def chunk_document(file_stream, chunk_size: int = 500, overlap: int = 50) -> Lis
 
     return chunks
 
-@app.route('/api/chunk', methods=['POST'])
+
+@app.route("/api/chunk", methods=["POST"])
 def chunk_endpoint():
     """
     API endpoint that accepts a PDF file upload and returns text chunks.
     """
-    if 'file' not in request.files:
+    if "file" not in request.files:
         return jsonify({"error": "No file part in the request"}), 400
 
-    file = request.files['file']
+    file = request.files["file"]
 
-    if file.filename == '':
+    if file.filename == "":
         return jsonify({"error": "No selected file"}), 400
 
-    if file and file.filename.endswith('.pdf'):
+    if file and file.filename.endswith(".pdf"):
         try:
             chunks = chunk_document(file)
             return jsonify({"chunks": chunks}), 200
@@ -55,5 +57,6 @@ def chunk_endpoint():
     else:
         return jsonify({"error": "Invalid file type, please upload a PDF"}), 400
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5001)

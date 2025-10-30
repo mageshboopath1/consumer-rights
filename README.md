@@ -2,288 +2,332 @@
 
 **Author:** Magesh Boopathi
 
-A production-grade Retrieval-Augmented Generation (RAG) system designed to answer consumer rights legal questions using a microservices architecture with Apache Airflow, RabbitMQ, ChromaDB, and Ollama.
+A production-grade Retrieval-Augmented Generation (RAG) system for answering consumer rights legal questions using microservices architecture, semantic chunking, and advanced embeddings.
 
 ---
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Key Features](#key-features)
 - [Architecture](#architecture)
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Usage](#usage)
-- [System Components](#system-components)
+- [Quick Start](#quick-start)
+- [Deployment](#deployment)
+- [Development](#development)
+- [Code Quality](#code-quality)
+- [Testing](#testing)
+- [Documentation](#documentation)
 - [Technology Stack](#technology-stack)
-- [Evaluation & Monitoring](#evaluation--monitoring)
-- [Project Structure](#project-structure)
-- [Configuration](#configuration)
 - [Contributing](#contributing)
-- [License](#license)
 
 ---
 
 ## Overview
 
-This system provides intelligent legal assistance for consumer rights questions by:
+This system provides intelligent legal assistance for consumer rights questions through:
 
-1. **Processing legal documents** (PDFs) into searchable vector embeddings
-2. **Filtering sensitive information** (PII) from user queries
-3. **Retrieving relevant legal context** from a vector database
-4. **Generating accurate answers** using a local LLM (Gemma 2B)
-5. **Storing conversation history** for audit and analysis
+1. **Semantic Document Processing** - Advanced chunking with MPNet embeddings
+2. **PII Protection** - Automatic redaction of sensitive information
+3. **Multi-Provider LLM Support** - AWS Bedrock, GCP Vertex AI, and Ollama
+4. **Vector Search** - Semantic search using ChromaDB
+5. **Production-Ready** - CI/CD, monitoring, security, and scalability
 
-The architecture follows a **microservices pattern** with two main pipelines:
-- **Data Preparation Pipeline**: ETL process for document ingestion
-- **Live Inference Pipeline**: Real-time query processing
+### Architecture Patterns
+
+- **Microservices** - Independently deployable services
+- **Event-Driven** - RabbitMQ message queue
+- **Containerized** - Full Docker Compose deployment
+- **Cloud-Native** - AWS EC2 deployment with auto-scaling
+
+---
+
+## Key Features
+
+### Core Capabilities
+
+- **Semantic Chunking** - Groups sentences by semantic similarity
+- **MPNet Embeddings** - 768-dimensional vectors (all-mpnet-base-v2)
+- **Multi-LLM Support** - AWS Bedrock, GCP Vertex AI, Ollama
+- **PII Redaction** - Names, emails, phone numbers
+- **Vector Search** - ChromaDB with persistent storage
+- **Conversation History** - PostgreSQL audit trails
+- **Real-time Processing** - Event-driven architecture
+
+### Production Features
+
+- **CI/CD Pipeline** - GitHub Actions automatic deployment to EC2
+- **Security** - Rate limiting, cost control, DDoS protection
+- **Monitoring** - Health checks, metrics, logging
+- **Experiments** - MLflow tracking for chunking strategies
+- **API Gateway** - FastAPI with authentication
+- **Scalability** - Horizontal scaling support
 
 ---
 
 ## Architecture
 
-### System Architecture Diagram
+### System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                   DATA PREPARATION PIPELINE                      │
-│                                                                   │
-│  PDF Document → Chunker → Embedder → ChromaDB                   │
-│                    ↓          ↓          ↓                       │
-│                 Airflow DAG Orchestration                        │
-└─────────────────────────────────────────────────────────────────┘
+DATA PREPARATION PIPELINE
+PDF -> Semantic Chunker -> MPNet Embedder -> ChromaDB
+       (500 chars)         (768-dim)         (279 chunks)
+       
+Orchestrated by: Apache Airflow
 
-┌─────────────────────────────────────────────────────────────────┐
-│                   LIVE INFERENCE PIPELINE                        │
-│                                                                   │
-│  User Query                                                      │
-│      ↓                                                           │
-│  PII Filter (redacts sensitive data)                            │
-│      ↓                                                           │
-│  RAG Core (retrieves context from ChromaDB)                     │
-│      ↓                                                           │
-│  LLM Connector (generates answer via Ollama)                    │
-│      ↓                    ↓                                      │
-│  User Response    PostgreSQL Worker (stores history)            │
-└─────────────────────────────────────────────────────────────────┘
+LIVE INFERENCE PIPELINE
+User Query -> API Gateway -> PII Filter -> RAG Core -> LLM
+                |              |            |          |
+           Authentication   Redaction   Retrieval  Generation
+                                                       |
+                                              PostgreSQL Worker
 ```
 
-### Message Queue Flow
+### Message Flow
 
 ```
-terminal_messages → PII Filter → redacted_queue → RAG Core 
-                                                      ↓
-                                              query_and_context
-                                                      ↓
+API Gateway -> terminal_messages -> PII Filter -> redacted_queue
+                                                      |
+                                                  RAG Core
+                                                      |
+                                             query_and_context
+                                                      |
                                               LLM Connector
-                                                      ↓
-                                        ┌─────────────┴─────────────┐
-                                        ↓                           ↓
-                                llm_output_queue              CUD_queue
-                                        ↓                           ↓
-                                    CLI Client              PostgreSQL Worker
+                                                      |
+                                    +-----------------+-----------------+
+                                    |                                   |
+                            llm_output_queue                       CUD_queue
+                                    |                                   |
+                                Response                        PostgreSQL Worker
 ```
 
 ---
 
-## Features
+## Quick Start
 
-### Core Features
-- **Document Processing**: Automated ETL pipeline for PDF ingestion
-- **Vector Search**: Semantic search using ChromaDB
-- **PII Protection**: Automatic redaction of names, emails, and phone numbers
-- **Local LLM**: Privacy-focused inference using Ollama (no external APIs)
-- **Conversation History**: PostgreSQL storage for audit trails
-- **Real-time Processing**: Event-driven architecture with RabbitMQ
+### Prerequisites
 
-### Advanced Features
-- **RAG Evaluation**: Automated metrics using DeepEval and Ragas
-- **Orchestration**: Apache Airflow for workflow management
-- **Containerized**: Full Docker Compose deployment
-- **Monitoring**: MLflow integration for experiment tracking
-- **Health Checks**: Built-in service health monitoring
-- **Retry Logic**: Robust error handling and recovery
+- Docker (v20.10+)
+- Docker Compose (v2.0+)
+- Python 3.9+
+- 8GB RAM minimum
 
----
-
-## Prerequisites
-
-- **Docker** (v20.10+)
-- **Docker Compose** (v2.0+)
-- **Python** (3.8+) - for local CLI usage
-- **Node.js** (optional) - for ChatbotUI
-- **8GB RAM minimum** (for running Ollama models)
-
----
-
-## Installation
-
-### 1. Clone the Repository
+### Local Development
 
 ```bash
+# 1. Clone repository
 git clone https://github.com/mageshboopathi/consumer-rights.git
 cd consumer-rights
-```
 
-### 2. Create Shared Network
-
-```bash
+# 2. Create shared network
 docker network create shared_network
-```
 
-### 3. Start Shared Services
-
-```bash
+# 3. Start shared services (ChromaDB, PostgreSQL)
 cd shared_services/chroma
 docker-compose up -d
 cd ../..
-```
 
-This starts:
-- ChromaDB (port 8002)
-- PostgreSQL (port 5432)
-
-### 4. Start Data Preparation Pipeline
-
-```bash
+# 4. Start data preparation pipeline
 cd data_prepartion_pipeline
 docker-compose up -d
 cd ..
-```
 
-This starts:
-- Chunker service (port 5001)
-- Embedder service (port 5002)
-- Airflow webserver (port 8080)
-- Airflow scheduler
-
-### 5. Start Live Inference Pipeline
-
-```bash
+# 5. Start live inference pipeline
 cd live_inference_pipeline
 docker-compose up -d
 cd ..
+
+# 6. Access services
+# Airflow: http://localhost:8080
+# RabbitMQ: http://localhost:15672 (guest/guest)
+# API Gateway: http://localhost:3001
 ```
 
-This starts:
-- RabbitMQ (ports 5672, 15672)
-- Ollama (port 11434)
-- PII Filter
-- RAG Core
-- LLM Connector
-- PostgreSQL Worker
-
-### 6. Initialize Airflow
+### Process Documents
 
 ```bash
-# Access Airflow webserver
-# Navigate to http://localhost:8080
-# Default credentials: admin/admin (set during first run)
+# Place PDFs in data_prepartion_pipeline/data/
+# Trigger Airflow DAG at http://localhost:8080
+# DAG ID: document_processing_pipeline
 ```
 
----
-
-## Usage
-
-### Processing Documents
-
-1. **Place PDF documents** in `data_prepartion_pipeline/data/`
-2. **Access Airflow UI**: http://localhost:8080
-3. **Trigger DAG**: `document_processing_pipeline`
-4. **Monitor progress** through Airflow UI
-
-The DAG will:
-- Extract text from PDFs
-- Chunk text into 500-character segments
-- Generate embeddings using all-MiniLM-L6-v2
-- Store in ChromaDB collection `document_embeddings`
-
-### Querying the System
-
-#### Option 1: CLI Interface
+### Query System
 
 ```bash
+# Option 1: CLI
 cd live_inference_pipeline/CLI
 python cli.py
+
+# Option 2: API
+curl -X POST http://localhost:3001/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What are my consumer rights?"}'
 ```
-
-Then enter your questions:
-```
-> What are my rights as a consumer when purchasing defective products?
-```
-
-#### Option 2: With Evaluation
-
-```bash
-cd live_inference_pipeline/CLI
-python evaluation.py
-```
-
-This runs queries with real-time evaluation metrics.
-
-### Monitoring Services
-
-- **Airflow UI**: http://localhost:8080
-- **RabbitMQ Management**: http://localhost:15672 (guest/guest)
-- **ChromaDB**: http://localhost:8002
 
 ---
 
-## System Components
+## Deployment
 
-### Data Preparation Pipeline
+### AWS EC2 Deployment
 
-#### Chunker Service
-- **Port**: 5001
-- **Endpoint**: `POST /api/chunk`
-- **Function**: Extracts and chunks PDF text
-- **Chunk Size**: 500 characters with 50-character overlap
+```bash
+# 1. Deploy to EC2
+./deploy_to_ec2.sh
 
-#### Embedder Service
-- **Port**: 5002
-- **Endpoint**: `POST /api/embed`
-- **Function**: Generates vector embeddings
-- **Model**: `all-MiniLM-L6-v2`
-- **Batch Size**: 50 chunks
+# 2. Setup CI/CD (one-time)
+./setup_github_secrets.sh
 
-#### Airflow DAG
-- **DAG ID**: `document_processing_pipeline`
-- **Schedule**: Manual trigger
-- **Tasks**:
-  1. `call_chunker_service`: Process PDF
-  2. `call_embedder_service`: Generate embeddings
-  3. `ingest_into_chroma`: Store in vector DB
+# 3. Push to GitHub
+git push origin main
+# GitHub Actions automatically deploys
+```
 
-### Live Inference Pipeline
+### CI/CD Pipeline
 
-#### PII Filter
-- **Queue In**: `terminal_messages`
-- **Queue Out**: `redacted_queue`
-- **Function**: Redacts names, emails, phone numbers
-- **Patterns**:
-  - Names: `[NAME]`
-  - Emails: `[EMAIL]`
-  - Phones: `[PHONE]`
+- **Trigger** - Push to main branch
+- **Process** - Automatic deployment to EC2
+- **Time** - 3-5 minutes
+- **Monitoring** - GitHub Actions dashboard
 
-#### RAG Core
-- **Queue In**: `redacted_queue`
-- **Queue Out**: `query_and_context`
-- **Function**: Retrieves relevant context
-- **Retrieval**: Top 3 documents from ChromaDB
-- **Embedding Model**: `all-MiniLM-L6-v2`
+---
 
-#### LLM Connector
-- **Queue In**: `query_and_context`
-- **Queue Out**: `llm_output_queue`, `CUD_queue`
-- **Function**: Generates answers using LLM
-- **Model**: Gemma 2B Instruct (via Ollama)
-- **Features**: Chat history persistence
+## Development
 
-#### PostgreSQL Worker
-- **Queue In**: `CUD_queue`
-- **Function**: Handles database operations
-- **Operations**: CREATE, UPDATE, DELETE
-- **Table**: `chat_history`
+### Project Structure
+
+```
+consumer-rights/
+├── data_prepartion_pipeline/       # ETL pipeline
+│   ├── Chunking/
+│   │   ├── semantic_chunker.py    # Semantic chunking
+│   │   ├── naive_chunker.py       # Naive chunking
+│   │   └── chunker_factory.py     # Factory pattern
+│   ├── Embedding/
+│   │   └── embeder.py             # MPNet embeddings
+│   └── dags/
+│       └── process_document_dag.py # Airflow DAG
+│
+├── live_inference_pipeline/        # Real-time inference
+│   ├── api_gateway/               # FastAPI gateway
+│   ├── PII/                       # PII redaction
+│   ├── RAG-Core/                  # Vector retrieval
+│   ├── LLM-Connector/             # Multi-LLM support
+│   ├── llm_providers/             # Provider implementations
+│   ├── security/                  # Security features
+│   └── monitoring/                # Metrics & logging
+│
+├── experiments/                    # Chunking experiments
+├── shared_services/                # Shared infrastructure
+├── tests/                         # Test suite
+├── .github/workflows/             # CI/CD pipelines
+└── docs/                          # Documentation
+```
+
+### Configuration
+
+System configuration is centralized in `config.py`:
+
+```python
+# RAG Configuration
+RAG_CHUNKING_STRATEGY=semantic
+RAG_CHUNK_SIZE=500
+RAG_CHUNK_OVERLAP=50
+RAG_SEMANTIC_SIMILARITY_THRESHOLD=0.5
+RAG_EMBEDDING_MODEL=all-mpnet-base-v2
+RAG_EMBEDDING_DIMENSION=768
+
+# ChromaDB
+CHROMA_HOST=chroma_service
+CHROMA_PORT=8000
+CHROMA_COLLECTION_NAME=semantic_mpnetbasev_500_20251030
+
+# LLM Provider (bedrock, vertex_ai, ollama)
+LLM_PROVIDER=vertex_ai
+```
+
+---
+
+## Code Quality
+
+### Tools Available
+
+```bash
+# Format all code (Black + isort + flake8)
+./format_code.sh
+
+# Individual checks
+black . --exclude '(chroma_data|mlruns|\.venv|venv)'
+isort . --skip chroma_data --skip mlruns
+flake8 . --exclude=chroma_data,mlruns,.venv,venv
+mypy . --exclude chroma_data --exclude mlruns
+pytest
+```
+
+### Code Standards
+
+- **Line Length** - 100 characters
+- **String Quotes** - Double quotes preferred
+- **Import Order** - stdlib -> third-party -> first-party
+- **Type Hints** - Encouraged but optional
+- **Docstrings** - Google style
+
+### Configuration Files
+
+- `pyproject.toml` - Black, isort, mypy configuration
+- `pytest.ini` - Test configuration
+- `.pre-commit-config.yaml` - Pre-commit hooks
+
+---
+
+## Testing
+
+### Test Suite
+
+```bash
+# Run all tests
+pytest
+
+# Run specific test file
+pytest tests/test_rag_core.py
+
+# Run with coverage
+pytest --cov=. --cov-report=html
+
+# Run with verbose output
+pytest -v
+```
+
+### Test Categories
+
+- `test_api_gateway.py` - API Gateway tests
+- `test_rag_core.py` - RAG Core tests
+- `test_pii_filter.py` - PII redaction tests
+- `test_llm_connector.py` - LLM integration tests
+- `test_llm_providers.py` - Multi-provider tests
+- `test_integration_e2e.py` - End-to-end tests
+- `test_security_phase1.py` - Security tests
+
+---
+
+## Documentation
+
+### Essential Documentation
+
+- **README.md** - This file (overview)
+- **CONTRIBUTING.md** - Contribution guidelines
+- **docs/CODE_QUALITY.md** - Code quality tools guide
+
+### API Documentation
+
+- **API Gateway** - http://localhost:3001/docs (Swagger UI)
+- **Chunker Service** - http://localhost:5001/api/docs
+- **Embedder Service** - http://localhost:5002/api/docs
+
+### Monitoring
+
+- **Airflow** - http://localhost:8080
+- **RabbitMQ** - http://localhost:15672
+- **MLflow** - http://localhost:5000 (experiments)
 
 ---
 
@@ -293,235 +337,46 @@ This runs queries with real-time evaluation metrics.
 |-----------|-----------|---------|
 | **Orchestration** | Apache Airflow | 2.9.2 |
 | **Message Queue** | RabbitMQ | 3-management |
-| **Vector Database** | ChromaDB | Latest |
+| **Vector Database** | ChromaDB | 0.5.23 |
 | **Relational DB** | PostgreSQL | 13 |
-| **LLM** | Ollama (Gemma) | 2B Instruct |
-| **Embeddings** | Sentence Transformers | all-MiniLM-L6-v2 |
+| **LLM Providers** | AWS Bedrock, GCP Vertex AI, Ollama | Latest |
+| **Embeddings** | Sentence Transformers | all-mpnet-base-v2 |
+| **API Framework** | FastAPI | Latest |
 | **PDF Processing** | PyMuPDF (fitz) | Latest |
-| **Web Framework** | Flask + Gunicorn | Latest |
-| **Evaluation** | DeepEval, Ragas | Latest |
-| **Experiment Tracking** | MLflow | Latest |
+| **Code Quality** | Black, isort, flake8, mypy | Latest |
+| **Testing** | pytest | Latest |
+| **CI/CD** | GitHub Actions | Latest |
 | **Containerization** | Docker & Docker Compose | Latest |
-
----
-
-## Evaluation & Monitoring
-
-### RAG Evaluation
-
-The system includes comprehensive evaluation capabilities:
-
-#### Offline Evaluation
-```bash
-cd data_prepartion_pipeline/evaluation
-python evaluate_rag.py
-```
-
-**Metrics**:
-- Context Precision
-- Retrieval Quality
-
-**Output**: Results logged to MLflow (port 5001)
-
-#### Online Evaluation
-
-Built into the CLI (`evaluation.py`):
-- **Answer Relevancy Metric**: Measures response relevance
-- **Contextual Precision Metric**: Evaluates context quality
-- **Threshold**: 0.8 for both metrics
-
-### Monitoring
-
-#### RabbitMQ Queues
-- `terminal_messages`: User input queue
-- `redacted_queue`: PII-filtered queries
-- `query_and_context`: RAG prompts
-- `llm_output_queue`: Final responses
-- `CUD_queue`: Database operations
-- `process_updates`: Status updates
-
-#### Database Tables
-```sql
--- Chat History
-SELECT * FROM chat_history 
-ORDER BY timestamp DESC 
-LIMIT 10;
-```
-
----
-
-## Project Structure
-
-```
-consumer-rights/
-├── data_prepartion_pipeline/
-│   ├── Chunking/
-│   │   ├── chunker.py          # PDF chunking service
-│   │   ├── Dockerfile
-│   │   └── requirements.txt
-│   ├── Embedding/
-│   │   ├── embeder.py          # Embedding generation service
-│   │   ├── Dockerfile
-│   │   └── requirements.txt
-│   ├── dags/
-│   │   └── process_document_dag.py  # Airflow DAG
-│   ├── data/
-│   │   └── sample.pdf          # Sample documents
-│   ├── evaluation/
-│   │   ├── evaluate_rag.py     # RAG evaluation script
-│   │   └── sample_golden_dataset.csv
-│   └── docker-compose.yml
-│
-├── live_inference_pipeline/
-│   ├── CLI/
-│   │   ├── cli.py              # Command-line interface
-│   │   └── evaluation.py       # CLI with evaluation
-│   ├── PII/
-│   │   ├── piiFilter.py        # PII redaction service
-│   │   └── Dockerfile
-│   ├── RAG-Core/
-│   │   ├── core.py             # RAG retrieval service
-│   │   └── dockerfile
-│   ├── LLM-Connector/
-│   │   ├── connector.py        # LLM inference service
-│   │   └── dockerfile
-│   ├── psql_worker/
-│   │   ├── worker.py           # Database worker
-│   │   ├── Dockerfile
-│   │   └── requirements.txt
-│   ├── ollama/
-│   │   ├── Dockerfile
-│   │   └── entrypoint.sh
-│   └── docker-compose.yml
-│
-├── shared_services/
-│   └── chroma/
-│       ├── docker-compose.yml
-│       └── postgres_init/
-│           └── init.sql        # Database schema
-│
-├── chroma_data/                # ChromaDB persistent storage
-└── README.md
-```
-
----
-
-## Configuration
-
-### Environment Variables
-
-#### Data Pipeline
-```bash
-# Airflow Configuration
-AIRFLOW__CORE__EXECUTOR=LocalExecutor
-AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
-```
-
-#### Inference Pipeline
-```bash
-# RabbitMQ
-RABBITMQ_HOST=rabbitmq
-
-# ChromaDB
-CHROMA_HOST=chroma_service
-CHROMA_PORT=8000
-
-# PostgreSQL
-DB_HOST=postgres
-DB_USER=myuser
-DB_PASSWORD=mypass
-DB_NAME=consumer_rights
-
-# Ollama
-OLLAMA_HOST=ollama
-OLLAMA_MODEL=gemma:2b-instruct
-```
-
-### Customization
-
-#### Change Chunk Size
-Edit `data_prepartion_pipeline/Chunking/chunker.py`:
-```python
-def chunk_document(file_stream, chunk_size: int = 500, overlap: int = 50):
-```
-
-#### Change Embedding Model
-Edit embedding services to use different models:
-```python
-model = SentenceTransformer('all-MiniLM-L6-v2')  # Change this
-```
-
-#### Change LLM Model
-Edit `live_inference_pipeline/LLM-Connector/connector.py`:
-```python
-OLLAMA_MODEL = 'gemma:2b-instruct'  # Change to llama2, mistral, etc.
-```
-
-#### Adjust Retrieval Results
-Edit `live_inference_pipeline/RAG-Core/core.py`:
-```python
-search_results = collection.query(
-    query_embeddings=[query_embedding],
-    n_results=3,  # Change number of retrieved documents
-)
-```
 
 ---
 
 ## Security Features
 
-1. **PII Redaction**: Automatic removal of sensitive information
-2. **Local Processing**: No external API calls (privacy-focused)
-3. **Network Isolation**: Docker network segmentation
-4. **Database Authentication**: PostgreSQL with credentials
-5. **Message Persistence**: Durable queues for reliability
+### Built-in Security
 
----
+- **PII Redaction** - Automatic removal of sensitive data
+- **Rate Limiting** - Per-user request limits
+- **Cost Control** - Budget limits per user
+- **DDoS Protection** - Request throttling
+- **Input Validation** - Prompt injection detection
+- **Output Validation** - Response sanitization
+- **Authentication** - JWT-based API auth
+- **Network Isolation** - Docker network segmentation
 
-## Troubleshooting
+### Security Configuration
 
-### Services Not Starting
+```python
+# Rate Limiting
+RATE_LIMIT_REQUESTS=100
+RATE_LIMIT_WINDOW=3600  # 1 hour
 
-```bash
-# Check Docker logs
-docker-compose logs <service-name>
+# Cost Control
+COST_LIMIT_PER_USER=10.0  # USD
+COST_LIMIT_WINDOW=86400   # 24 hours
 
-# Restart services
-docker-compose restart
-
-# Rebuild containers
-docker-compose up -d --build
-```
-
-### ChromaDB Connection Issues
-
-```bash
-# Verify ChromaDB is running
-curl http://localhost:8002/api/v1/heartbeat
-
-# Check network connectivity
-docker network inspect shared_network
-```
-
-### RabbitMQ Queue Issues
-
-```bash
-# Access RabbitMQ Management UI
-# http://localhost:15672
-# Username: guest, Password: guest
-
-# Purge queues if needed
-docker exec rabbitmq rabbitmqctl purge_queue terminal_messages
-```
-
-### Ollama Model Issues
-
-```bash
-# Pull model manually
-docker exec ollama ollama pull gemma:2b-instruct
-
-# List available models
-docker exec ollama ollama list
+# DDoS Protection
+DDOS_MAX_REQUESTS=1000
+DDOS_WINDOW=60  # 1 minute
 ```
 
 ---
@@ -532,15 +387,20 @@ Contributions are welcome! Please follow these steps:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+3. Make your changes
+4. Run code quality checks (`./format_code.sh`)
+5. Run tests (`pytest`)
+6. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+7. Push to the branch (`git push origin feature/AmazingFeature`)
+8. Open a Pull Request
+
+See CONTRIBUTING.md for detailed guidelines.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
 
 ---
 
@@ -552,36 +412,30 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## Acknowledgments
+## Quick Commands Reference
 
-- Apache Airflow for workflow orchestration
-- ChromaDB for vector storage
-- Ollama for local LLM inference
-- RabbitMQ for message queuing
-- The open-source community
+```bash
+# Development
+./format_code.sh                    # Format code
+pytest                              # Run tests
+docker-compose up -d                # Start services
 
----
+# Deployment
+./deploy_to_ec2.sh                  # Deploy to EC2
+./setup_github_secrets.sh           # Setup CI/CD
+git push origin main                # Auto-deploy
 
-## Support
+# Code Quality
+flake8 .                            # Lint code
+mypy .                              # Type check
+black .                             # Format code
 
-For questions or issues, please:
-1. Check the [Troubleshooting](#troubleshooting) section
-2. Review existing GitHub issues
-3. Create a new issue with detailed information
-
----
-
-## Roadmap
-
-- [ ] Add support for multiple document formats (DOCX, TXT)
-- [ ] Implement user authentication and authorization
-- [ ] Add web-based UI for document management
-- [ ] Support for multiple languages
-- [ ] Advanced RAG techniques (HyDE, Query Expansion)
-- [ ] Streaming responses for better UX
-- [ ] Integration with external legal databases
-- [ ] Advanced analytics dashboard
+# Monitoring
+docker-compose logs -f <service>    # View logs
+docker ps                           # Check services
+curl http://localhost:3001/health   # Health check
+```
 
 ---
 
-**Built with care by Magesh Boopathi**
+**Last Updated**: October 30, 2025

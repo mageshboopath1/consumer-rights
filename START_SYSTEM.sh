@@ -14,7 +14,7 @@ echo ""
 echo "[1/3] Starting Shared Services (ChromaDB & PostgreSQL)..."
 cd shared_services/chroma
 docker-compose up -d
-echo "✓ Shared services started"
+echo " Shared services started"
 echo ""
 
 # Wait for services to be ready
@@ -26,14 +26,14 @@ echo ""
 echo "[2/3] Starting Data Preparation Pipeline..."
 cd ../../data_prepartion_pipeline
 docker-compose up -d chunker embedder
-echo "✓ Data preparation services started"
+echo " Data preparation services started"
 echo ""
 
 # Step 3: Start Live Inference Pipeline
 echo "[3/3] Starting Live Inference Pipeline..."
 cd ../live_inference_pipeline
 docker-compose up -d
-echo "✓ Live inference pipeline started"
+echo " Live inference pipeline started"
 echo ""
 
 # Wait for all services to be ready
@@ -56,18 +56,18 @@ try:
     if len(collections) > 0:
         for col in collections:
             count = col.count()
-            print(f'✓ Collection \"{col.name}\" has {count} documents')
+            print(f' Collection \"{col.name}\" has {count} documents')
             if count == 0:
                 print('  WARNING: Collection is empty! Run populate script.')
     else:
         print('WARNING: No collections found! Run populate script.')
 except Exception as e:
     print(f'ERROR: Cannot connect to ChromaDB: {e}')
-" 2>/dev/null || echo "✗ ChromaDB check failed"
+" 2>/dev/null || echo " ChromaDB check failed"
 
 echo ""
 echo "Checking RabbitMQ queues..."
-docker exec rabbitmq rabbitmqctl list_queues name durable 2>/dev/null | tail -n +3 | head -6 || echo "✗ RabbitMQ check failed"
+docker exec rabbitmq rabbitmqctl list_queues name durable 2>/dev/null | tail -n +3 | head -6 || echo " RabbitMQ check failed"
 
 echo ""
 echo "=========================================="

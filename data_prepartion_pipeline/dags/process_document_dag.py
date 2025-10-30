@@ -7,7 +7,7 @@ from airflow.decorators import dag, task
 
 PDF_FILE_PATH = "/opt/airflow/data/sample.pdf"
 
-CHROMA_HOST = "chroma_service" 
+CHROMA_HOST = "chroma_service"
 CHROMA_PORT = 8000
 COLLECTION_NAME = "document_embeddings"
 
@@ -35,11 +35,13 @@ def process_document_dag():
         chunker_url = "http://chunker:5001/api/chunk"
         try:
             with open(PDF_FILE_PATH, "rb") as f:
-                files = {"file": (PDF_FILE_PATH.split('/')[-1], f, "application/pdf")}
+                files = {"file": (PDF_FILE_PATH.split("/")[-1], f, "application/pdf")}
                 response = requests.post(chunker_url, files=files)
                 response.raise_for_status()
         except FileNotFoundError:
-            raise FileNotFoundError(f"The file {PDF_FILE_PATH} was not found inside the Airflow container.")
+            raise FileNotFoundError(
+                f"The file {PDF_FILE_PATH} was not found inside the Airflow container."
+            )
         result = response.json()
         print(f"Received {len(result['chunks'])} chunks from the chunker service.")
         return result["chunks"]
@@ -55,20 +57,22 @@ def process_document_dag():
 
         all_embeddings = []
         BATCH_SIZE = 50
-        
+
         print(f"Starting to embed {len(chunks)} chunks in batches of {BATCH_SIZE}...")
         embedder_url = "http://embedder:5002/api/embed"
 
         for i in range(0, len(chunks), BATCH_SIZE):
-            chunk_batch = chunks[i:i + BATCH_SIZE]
+            chunk_batch = chunks[i : i + BATCH_SIZE]
             payload = {"chunks": chunk_batch}
             response = requests.post(embedder_url, json=payload)
             response.raise_for_status()
             result = response.json()
             batch_embeddings = result.get("embeddings", [])
-            
+
             all_embeddings.extend(batch_embeddings)
-            print(f"Processed batch {i//BATCH_SIZE + 1}, got {len(batch_embeddings)} embeddings.")
+            print(
+                f"Processed batch {i//BATCH_SIZE + 1}, got {len(batch_embeddings)} embeddings."
+            )
 
         print(f"Finished embedding. Total embeddings created: {len(all_embeddings)}")
         return {"chunks": chunks, "embeddings": all_embeddings}
@@ -91,7 +95,9 @@ def process_document_dag():
 
         ids = [str(uuid.uuid4()) for _ in chunks]
 
-        print(f"Ingesting {len(chunks)} documents into the '{COLLECTION_NAME}' collection...")
+        print(
+            f"Ingesting {len(chunks)} documents into the '{COLLECTION_NAME}' collection..."
+        )
         collection.add(embeddings=embeddings, documents=chunks, ids=ids)
         print("Ingestion successful!")
         return {"ingested_count": len(chunks)}
@@ -99,5 +105,6 @@ def process_document_dag():
     chunk_list = call_chunker_service()
     embedding_data = call_embedder_service(chunks=chunk_list)
     ingest_into_chroma(data=embedding_data)
+
 
 process_document_dag()

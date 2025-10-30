@@ -1,0 +1,25 @@
+[flake8]
+max-line-length = 100
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    build,
+    dist,
+    *.egg-info,
+    chroma_data,
+    mlruns,
+    .pytest_cache,
+    CLI
+ignore = 
+    E203,
+    W503,
+    E501,
+    F541
+per-file-ignores =
+    __init__.py:F401
+    test_*.py:F401,F841,E402
+    *_diagnosis.py:F401
+    check_*.py:F401,F541
+    enable_*.py:F401
