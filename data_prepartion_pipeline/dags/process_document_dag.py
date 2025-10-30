@@ -1,9 +1,9 @@
+import uuid
+
+import chromadb
 import pendulum
 import requests
-import chromadb
-import uuid
 from airflow.decorators import dag, task
-
 
 PDF_FILE_PATH = "/opt/airflow/data/sample.pdf"
 

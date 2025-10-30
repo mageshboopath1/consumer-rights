@@ -1,9 +1,10 @@
-import re
-import os
 import json
+import os
+import re
 from typing import List
-from flask import Flask, request, jsonify
+
 import fitz
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 

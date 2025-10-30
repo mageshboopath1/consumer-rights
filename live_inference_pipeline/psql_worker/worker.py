@@ -1,7 +1,8 @@
 # psql_worker/worker.py
+import json
 import os
 import time
-import json
+
 import pika
 import psycopg2
 

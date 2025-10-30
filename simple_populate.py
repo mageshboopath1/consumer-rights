@@ -2,6 +2,7 @@
 """Simple script to populate ChromaDB - run from rag-core container"""
 
 import uuid
+
 import chromadb
 
 # Sample chunks from the Consumer Protection Act

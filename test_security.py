@@ -9,9 +9,9 @@ import time
 
 sys.path.insert(0, "live_inference_pipeline")
 
-from security.rate_limiter import rate_limiter
-from security.ddos_protection import ddos_protection
 from security.cost_limiter import cost_limiter
+from security.ddos_protection import ddos_protection
+from security.rate_limiter import rate_limiter
 
 
 def test_rate_limiting():

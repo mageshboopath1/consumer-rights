@@ -3,9 +3,9 @@ DDoS Protection Layer
 Detects and mitigates distributed denial of service attacks
 """
 
-from datetime import datetime, timedelta
-from collections import defaultdict
 import hashlib
+from collections import defaultdict
+from datetime import datetime, timedelta
 
 
 class DDoSProtection:

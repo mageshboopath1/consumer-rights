@@ -3,14 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'live_inference_pipeline/**'
-      - 'shared_services/**'
   workflow_dispatch:
-
-env:
-  AWS_REGION: ap-south-1
-  ECR_REGISTRY: 692461731109.dkr.ecr.ap-south-1.amazonaws.com
 
 jobs:
   deploy:
@@ -20,68 +13,116 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
     
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@v1.0.0
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-    
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-    
-    - name: Build and push pii-filter
-      working-directory: ./live_inference_pipeline/PII
-      run: |
-        docker build -t consumer-rights/pii-filter .
-        docker tag consumer-rights/pii-filter:latest ${{ env.ECR_REGISTRY }}/consumer-rights/pii-filter:latest
-        docker push ${{ env.ECR_REGISTRY }}/consumer-rights/pii-filter:latest
-    
-    - name: Build and push rag-core
-      working-directory: ./live_inference_pipeline/RAG-Core
-      run: |
-        docker build -t consumer-rights/rag-core .
-        docker tag consumer-rights/rag-core:latest ${{ env.ECR_REGISTRY }}/consumer-rights/rag-core:latest
-        docker push ${{ env.ECR_REGISTRY }}/consumer-rights/rag-core:latest
-    
-    - name: Build and push llm-connector
-      working-directory: ./live_inference_pipeline/LLM-Connector
-      run: |
-        docker build -t consumer-rights/llm-connector .
-        docker tag consumer-rights/llm-connector:latest ${{ env.ECR_REGISTRY }}/consumer-rights/llm-connector:latest
-        docker push ${{ env.ECR_REGISTRY }}/consumer-rights/llm-connector:latest
-    
-    - name: Build and push psql-worker
-      working-directory: ./live_inference_pipeline/psql_worker
-      run: |
-        docker build -t consumer-rights/psql-worker .
-        docker tag consumer-rights/psql-worker:latest ${{ env.ECR_REGISTRY }}/consumer-rights/psql-worker:latest
-        docker push ${{ env.ECR_REGISTRY }}/consumer-rights/psql-worker:latest
-    
-    - name: Deploy to EC2
-      env:
-        EC2_HOST: ${{ secrets.EC2_HOST }}
-        EC2_KEY: ${{ secrets.EC2_SSH_KEY }}
-      run: |
-        # Save SSH key
-        echo "$EC2_KEY" > ec2-key.pem
-        chmod 400 ec2-key.pem
-        
-        # Deploy to EC2
-        ssh -i ec2-key.pem -o StrictHostKeyChecking=no ubuntu@$EC2_HOST << 'EOF'
-          cd consumer-rights/live_inference_pipeline
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: 22
+        script: |
+          set -e
           
-          # Login to ECR
-          aws ecr get-login-password --region ap-south-1 | \
-            docker login --username AWS --password-stdin 692461731109.dkr.ecr.ap-south-1.amazonaws.com
+          echo "[1/7] Navigating to project directory..."
+          cd /home/ubuntu/consumer-rights || exit 1
           
-          # Pull latest images
-          docker-compose pull
+          echo "[2/7] Creating backup..."
+          BACKUP_DIR="backups/cicd_$(date +%Y%m%d_%H%M%S)"
+          mkdir -p "$BACKUP_DIR"
+          git rev-parse HEAD > "$BACKUP_DIR/git_commit.txt" 2>/dev/null || echo "no-git" > "$BACKUP_DIR/git_commit.txt"
+          echo "Backup created: $BACKUP_DIR"
           
-          # Restart services
-          docker-compose up -d
+          echo "[3/7] Pulling latest code from GitHub..."
+          git fetch origin main
+          PREV_COMMIT=$(git rev-parse HEAD)
+          git pull origin main
+          CURR_COMMIT=$(git rev-parse HEAD)
           
-          # Show status
+          echo "Previous commit: $PREV_COMMIT"
+          echo "Current commit: $CURR_COMMIT"
+          
+          echo "[4/7] Checking for changes..."
+          if [ "$PREV_COMMIT" = "$CURR_COMMIT" ]; then
+            echo "No changes detected. Skipping rebuild."
+            exit 0
+          fi
+          
+          # Check which files changed
+          CHANGED_FILES=$(git diff --name-only $PREV_COMMIT $CURR_COMMIT)
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          
+          # Determine if rebuild is needed
+          NEEDS_REBUILD=false
+          if echo "$CHANGED_FILES" | grep -q "live_inference_pipeline/"; then
+            NEEDS_REBUILD=true
+          fi
+          if echo "$CHANGED_FILES" | grep -q "shared_services/"; then
+            NEEDS_REBUILD=true
+          fi
+          
+          if [ "$NEEDS_REBUILD" = "false" ]; then
+            echo "No service changes detected. Skipping rebuild."
+            exit 0
+          fi
+          
+          echo "[5/7] Stopping services..."
+          cd live_inference_pipeline
+          docker-compose down || true
+          
+          cd ../shared_services/chroma
+          docker-compose down || true
+          
+          echo "[6/7] Starting services..."
+          cd /home/ubuntu/consumer-rights
+          
+          # Start shared services
+          cd shared_services/chroma
+          docker-compose up -d --build
+          
+          echo "Waiting for shared services to be ready..."
+          sleep 20
+          
+          # Start live inference pipeline
+          cd ../../live_inference_pipeline
+          docker-compose up -d --build
+          
+          echo "Waiting for live inference services to be ready..."
+          sleep 30
+          
+          echo "[7/7] Verifying services..."
           docker ps
-        EOF
+          
+          # Check if key services are running
+          if docker ps | grep -q "rag-core"; then
+            echo "rag-core is running"
+          else
+            echo "WARNING: rag-core is NOT running"
+          fi
+          
+          if docker ps | grep -q "pii-filter"; then
+            echo "pii-filter is running"
+          else
+            echo "WARNING: pii-filter is NOT running"
+          fi
+          
+          if docker ps | grep -q "llm-connector"; then
+            echo "llm-connector is running"
+          else
+            echo "WARNING: llm-connector is NOT running"
+          fi
+          
+          # Log deployment
+          echo "$(date): Deployed commit $CURR_COMMIT via GitHub Actions" >> /var/log/deployment.log
+          
+          echo ""
+          echo "Deployment completed successfully!"
+          echo "Services are running on EC2"
+    
+    - name: Deployment Failed
+      if: failure()
+      run: |
+        echo "Deployment to EC2 failed!"
+        echo "Check the logs above for details"
+        echo "SSH to EC2 to investigate: ssh -i consumer-rights-key.pem ubuntu@<EC2_IP>"
+        exit 1

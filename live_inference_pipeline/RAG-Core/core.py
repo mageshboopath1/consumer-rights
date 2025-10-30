@@ -1,10 +1,11 @@
-import pika
-import time
+import json
 import os
 import sys
-import chromadb
-import json
+import time
 from datetime import datetime, timezone
+
+import chromadb
+import pika
 from sentence_transformers import SentenceTransformer
 
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "rabbitmq")

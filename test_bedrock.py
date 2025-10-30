@@ -4,10 +4,11 @@ Test script to verify AWS Bedrock connectivity and Llama 3 70B access
 Run this before deploying to ensure everything is configured correctly
 """
 
-import boto3
 import json
 import os
 import sys
+
+import boto3
 
 
 def test_bedrock_connection():

@@ -1,12 +1,12 @@
-import pika
+import json
 import sys
 import time
-from deepeval.metrics import AnswerRelevancyMetric
+
+import pika
+from deepeval import evaluate
+from deepeval.metrics import AnswerRelevancyMetric, ContextualPrecisionMetric
 from deepeval.models import OllamaModel
 from deepeval.test_case import LLMTestCase
-import json
-from deepeval.metrics import AnswerRelevancyMetric, ContextualPrecisionMetric
-from deepeval import evaluate
 
 RABBITMQ_HOST = "localhost"
 PRODUCE_QUEUE = "terminal_messages"

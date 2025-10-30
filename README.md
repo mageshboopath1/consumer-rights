@@ -170,24 +170,94 @@ curl -X POST http://localhost:3001/api/query \
 
 ### AWS EC2 Deployment
 
+#### Step 1: Deploy EC2 Instance (One-Time)
+
 ```bash
-# 1. Deploy to EC2
+# Run deployment script
 ./deploy_to_ec2.sh
 
-# 2. Setup CI/CD (one-time)
-./setup_github_secrets.sh
+# Follow prompts to enter:
+# - AWS Access Key ID
+# - AWS Secret Access Key
+# - PostgreSQL password
 
-# 3. Push to GitHub
+# Wait 5-10 minutes for setup to complete
+```
+
+This creates:
+- EC2 Spot Instance (t3.small)
+- Security groups
+- IAM roles
+- Installs Docker and services
+- Clones repository
+- Starts all services
+
+#### Step 2: Setup GitHub Secrets (One-Time)
+
+Configure 3 secrets in GitHub for automatic deployment:
+
+**Using GitHub CLI:**
+```bash
+# Get your EC2 IP
+EC2_IP=$(aws ec2 describe-instances \
+  --filters "Name=tag:Name,Values=consumer-rights-rag" \
+  --query "Reservations[0].Instances[0].PublicIpAddress" \
+  --output text \
+  --region ap-south-1)
+
+# Set secrets
+gh secret set EC2_HOST --body "$EC2_IP"
+gh secret set EC2_USER --body "ubuntu"
+gh secret set EC2_SSH_KEY < consumer-rights-key.pem
+```
+
+**Using GitHub Web Interface:**
+1. Go to repository **Settings** > **Secrets and variables** > **Actions**
+2. Add 3 secrets:
+   - `EC2_HOST`: Your EC2 public IP
+   - `EC2_USER`: `ubuntu`
+   - `EC2_SSH_KEY`: Contents of `consumer-rights-key.pem`
+
+See [SETUP_GITHUB_SECRETS.md](SETUP_GITHUB_SECRETS.md) for detailed instructions.
+
+#### Step 3: Deploy Automatically
+
+```bash
+# Push to main branch
 git push origin main
-# GitHub Actions automatically deploys
+
+# GitHub Actions automatically:
+# 1. Connects to EC2 via SSH
+# 2. Pulls latest code
+# 3. Rebuilds changed services
+# 4. Restarts containers
+# 5. Verifies services are running
 ```
 
 ### CI/CD Pipeline
 
-- **Trigger** - Push to main branch
-- **Process** - Automatic deployment to EC2
-- **Time** - 3-5 minutes
-- **Monitoring** - GitHub Actions dashboard
+- **Trigger**: Push to main branch or manual workflow dispatch
+- **Process**: SSH to EC2, pull code, rebuild, restart services
+- **Time**: 2-3 minutes
+- **Monitoring**: https://github.com/YOUR_USERNAME/consumer-rights/actions
+
+### Manual Deployment
+
+If you prefer manual deployment:
+
+```bash
+# SSH to EC2
+ssh -i consumer-rights-key.pem ubuntu@YOUR_EC2_IP
+
+# Pull latest code
+cd consumer-rights
+git pull origin main
+
+# Restart services
+cd live_inference_pipeline
+docker-compose down
+docker-compose up -d --build
+```
 
 ---
 

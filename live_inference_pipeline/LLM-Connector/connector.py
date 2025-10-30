@@ -1,10 +1,11 @@
-import pika
-import time
+import json
 import os
 import sys
-import json
-import boto3
+import time
 from datetime import datetime, timezone
+
+import boto3
+import pika
 
 # --- Configuration ---
 RABBITMQ_HOST = os.getenv("RABBITMQ_HOST", "rabbitmq")

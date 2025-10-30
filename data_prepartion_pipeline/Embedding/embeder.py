@@ -1,9 +1,10 @@
 import json
-import sys
 import os
-from typing import List, Dict, Any
+import sys
+from typing import Any, Dict, List
+
+from flask import Flask, jsonify, request
 from sentence_transformers import SentenceTransformer
-from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
